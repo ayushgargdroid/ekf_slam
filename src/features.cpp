@@ -45,10 +45,12 @@ int main(int argc, char **argv)
 
   falkolib::BSCExtractor<falkolib::FALKO> bsc(16,8);
   falkolib::NNMatcher<falkolib::FALKO> matcher;
+  falkolib::NNMatcher<falkolib::BSC> matcher2;
   matcher.setDistanceThreshold(0.1);
   std::vector<std::pair<int, int> > assoNN;
-  std::vector<falkolib::BSC> bscDesc,prevBscDesc;
+  std::vector<std::pair<int, int> > assoNN2;
   std::vector<std::vector<falkolib::FALKO>> keypoints;
+  std::vector<std::vector<falkolib::BSC>> discriptors;
 
   int iter = 0;
   while(ros::ok())
@@ -65,14 +67,25 @@ int main(int argc, char **argv)
 
     std::vector<float> new_intensity(721,0);
     std::vector<falkolib::FALKO> keypoints1;
+    std::vector<falkolib::BSC> bscDesc;
+
     fe.extract(scan1,keypoints1);
-    // bsc.compute(scan1,keypoints1,bscDesc);
+    bsc.compute(scan1,keypoints1,bscDesc);
 
     if(iter>=2)
     {
       // ROS_INFO("Matcher: %d",matcher.match(keypoints[iter-1],keypoints[iter],assoNN));
       // ROS_INFO("Keypoints1 size:%ld Keypoints2 size:%ld Keypoints size:%ld",keypoints[iter-2].size(),keypoints[iter-1].size(),keypoints.size());
-      ROS_INFO("Matcher: %d",matcher.match(keypoints[iter-2],keypoints[iter-1],assoNN));
+      ROS_INFO("Matcher1: %d",matcher.match(keypoints[iter-2],keypoints[iter-1],assoNN));
+      ROS_INFO("Matcher2: %d",matcher2.match(discriptors[iter-2],discriptors[iter-1],assoNN2));
+      for(int i = 0;i<assoNN.size();i++)
+      {
+        ROS_INFO("1Matching Pairs %d %d",assoNN[i].first,assoNN[i].second);
+      }
+      for(int i = 0;i<assoNN2.size();i++)
+      {
+        ROS_INFO("2Matching Pairs %d %d",assoNN2[i].first,assoNN2[i].second);
+      }
     }
     
     // ROS_INFO("BSC Descriptor length: %ld",bscDesc.size());
@@ -88,9 +101,8 @@ int main(int argc, char **argv)
     ROS_INFO("Frame ID: %s\nAngle Max: %f Min: %f\nAngle Increment: %f\nTime increment: %f\nScan Time: %f\nRange Max: %f Min: %f\nLen: %ld\n",comm.header.frame_id.c_str(),comm.angle_max,comm.angle_min,comm.angle_increment,comm.time_increment,comm.scan_time,comm.range_max,comm.range_min,comm.intensities.size());
 
     iter++;
-    // prevBscDesc = bscDesc;
     keypoints.push_back(keypoints1);
-    // prevKeypoints = keypoints1;
+    discriptors.push_back(bscDesc);
     r.sleep();
   }
 
