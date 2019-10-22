@@ -1,9 +1,26 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ekf_slam)
 
-set(falkolib_DIR "~/Downloads/falkolib/cmake_modules/")
-set(Eigen3_DIR "/usr/local/share/eigen3/cmake/")
-set(Eigen3_INCLUDE_DIR "/usr/local/include/eigen3")
+# set(falkolib_DIR "~/Downloads/falkolib/cmake_modules/")
+
+find_package(Eigen3 REQUIRED)
+if (${EIGEN3_FOUND})
+  include_directories(${EIGEN3_INCLUDE_DIR})
+  message(STATUS "EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
+else(${EIGEN3_FOUND})
+  message(WARNING "Cannot find Eigen3 Library")
+endif(${EIGEN3_FOUND})
+
+find_package(falkolib REQUIRED)
+if (${falkolib_FOUND})
+  include_directories(${falkolib_INCLUDE_DIR})
+  message(STATUS "falkolib_INCLUDE_DIR: ${falkolib_INCLUDE_DIR}")
+else(${falkolib_FOUND})
+  message(WARNING "Cannot find falkolib Library")
+endif(${falkolib_FOUND})
+
+# set(Eigen3_DIR "/usr/lib/cmake/eigen3/")
+# SET( EIGEN3_INCLUDE_DIR "/usr/include/eigen3" )
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -154,6 +171,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/features.cpp)
+add_executable(${PROJECT_NAME}_test_node src/test.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -164,9 +182,14 @@ add_executable(${PROJECT_NAME}_node src/features.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  ${falkolib_LIBRARIES}
+)
+target_link_libraries(${PROJECT_NAME}_test_node
   ${catkin_LIBRARIES}
   ${falkolib_LIBRARIES}
 )
