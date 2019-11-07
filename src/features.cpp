@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   ros::Publisher moveCmdPub = n.advertise<geometry_msgs::Twist>("/hsrb/command_velocity",10);
 
   geometry_msgs::Twist moveCmd;
-  moveCmd.angular.z = 0.1;
+  moveCmd.angular.z = moveCmd.linear.x = 0;
 
   ros::Rate(1).sleep();
   ros::Rate r(10);
@@ -137,6 +137,8 @@ int main(int argc, char **argv)
     bsc.compute(scan1,keypoints1,bscDesc);
     
     // int matches = matcher.match(keypoints,keypoints1,assoNN);
+    std::cout<<"Mean mat:\n"<<meanMat.block(0,0,3,1)<<std::endl;
+    
     ROS_INFO("Total keypoints detected: %ld",keypoints1.size());
 
     for(int i=0;i<keypoints1.size();i++)
@@ -169,7 +171,6 @@ int main(int argc, char **argv)
       Eigen::MatrixXd Zeta(2,2);
 
       Zeta = Eigen::MatrixXd::Zero(2,2);
-      std::cout<<"Mean mat:\n"<<meanMat<<std::endl;
       for(int k = 0; k<(landmarkSize+1);k++)
       {
         delta(0,0) = meanMat(2*k+3,0) - meanMat(0,0);
@@ -231,10 +232,8 @@ int main(int argc, char **argv)
         keypoints.push_back(keypoints1[i]);
       }
 
-      ROS_INFO("Zeta: %ld %ld H: %ld %ld cov: %ld %ld",zetaList[argMin].rows(),zetaList[argMin].cols(),hList[argMin].rows(),hList[argMin].cols(),covMat.rows(),covMat.cols());
       K = covMat * hList[argMin].transpose() * zetaList[argMin].inverse();
       meanMat = meanMat + K*(Z - zList[argMin]);
-      ROS_INFO("K: %ld %ld H: %ld %ld cov: %ld %ld",K.rows(),K.cols(),hList[argMin].rows(),hList[argMin].cols(),covMat.rows(),covMat.cols());
       covMat = (Eigen::MatrixXd::Identity(3+2*landmarkSize,3+2*landmarkSize) - K * hList[argMin])*covMat;
       ROS_INFO("Keypoint size: %ld",landmarkSize);
     }
